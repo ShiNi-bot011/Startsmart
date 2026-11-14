@@ -1,0 +1,21 @@
+SPRINT 1 STARTER — Lai Shi Ni — US003: Manage subjects
+
+YOUR INPUT
+Subject fields agreed with the team and the verified user's identity supplied by PHP authentication middleware.
+
+YOUR PROCESS
+Define the subject create/list behavior, validate it through the API service, and persist user-owned subjects through the repository layer.
+
+YOUR OUTPUT AND INTERFACE
+Stable subject identifiers and summaries for the frontend; US004 uses the selected subject identifier when creating a task.
+
+SUGGESTED FILES
+- backend/src/Controllers/SubjectController.php
+- backend/src/Services/SubjectService.php
+- backend/src/Repositories/SubjectRepository.php
+- frontend/src/features/us003-subjects.js
+
+GET STARTED
+Lai, agree with Joyce on the subject fields and stable identifier, then record the US003 API request and response in team/API_CONTRACT.md.
+
+Planning guidance only; listed source placeholders are empty.

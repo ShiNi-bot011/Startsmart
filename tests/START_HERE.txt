@@ -1,0 +1,17 @@
+SPRINT 1 STARTER — Acceptance and integration planning
+
+SPRINT 1 SCOPE
+- Joyce: US004
+- Lai: US003
+- Mohammad: US001 and US002
+- Md Tamim: US005 and US009
+
+SUGGESTED FUTURE FILES
+- tests/acceptance/sprint-1.md — observable user success and failure scenarios
+- tests/integration/auth-api.md — Firebase identity token to PHP API behavior
+- tests/integration/subjects-and-tasks.md — subject/task API handoff
+
+GET STARTED
+Write one observable success case and one failure case for each Sprint 1 use case, then link each case to its owner and agreed API contract.
+
+Planning guidance only; no runnable test code belongs here.

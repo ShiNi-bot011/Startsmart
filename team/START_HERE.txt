@@ -1,0 +1,23 @@
+SPRINT 1 OWNERSHIP AND COORDINATION
+
+SPRINT 1
+- Joyce Puyang Maurice Utap — US004: Create academic tasks
+- Lai Shi Ni — US003: Manage subjects
+- Mohammad Harith Haikal — US001: Register account; US002: Log in
+- Md Tamim Shams — US005: Identify task obstacles; US009: Request task hint
+
+SPRINT 2 (AI AGENT)
+- Joyce — new edit/delete academic tasks; US011; US012
+- Lai — US013; US016
+- Mohammad — US006; US007
+- Md Tamim — US008; US010
+
+SHARED REFERENCES
+- docs/SPRINT_1_ARCHITECTURE.md — member input/process/output/interface contracts
+- team/API_CONTRACT.md — shared API and data handoffs
+- docs/GITHUB_SETUP_CHECKLIST.md — shared repository workflow
+
+GET STARTED
+Each Sprint 1 owner, confirm your acceptance criteria and file ownership, then agree on shared API/schema changes before implementation begins.
+
+Planning guidance only; no implementation code belongs in this file.
