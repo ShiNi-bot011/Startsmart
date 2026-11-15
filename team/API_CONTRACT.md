@@ -1,37 +1,127 @@
-# API Contract — Sprint 1
+# API Contract — Current StartSmart PHP App
 
-Status: Draft for agreement before feature integration. This is documentation, not executable code.
+Status: Current implementation contract for the PHP + HTML + MySQL application.
 
-## Common request rules
+This project is not a JSON REST API yet. It uses PHP server-rendered pages with HTML forms and session-based authentication. The app is designed to run behind a PHP-enabled web server such as XAMPP, WAMP, MAMP, or Apache + PHP.
 
-- Protected routes require a Firebase ID token in the authorization header.
-- The PHP API validates the token; the verified Firebase user ID determines record ownership.
-- Request bodies contain feature data, not trusted identity claims.
-- Responses and error behavior must be agreed before frontend and backend features integrate.
-- Firebase registration and login use Firebase Authentication; they are not MySQL password endpoints.
+## 1. Application type
 
-## Proposed response behavior
+- Runtime: PHP web application
+- Interface: HTML forms and server-side rendering
+- Auth model: PHP sessions, not Firebase
+- Persistence: MySQL via `backend/config/database.php`
+- Request pattern: `POST` form submission + redirect, not AJAX/JSON API calls
 
-- Successful reads return the requested record or a collection of records.
-- Successful creates return the created record and its stable identifier.
-- Validation and authorization failures return an explicit error code and user-safe message.
-- A failed database or provider operation must not be reported as a successful save.
+## 2. Current authenticated flow
 
-## Proposed feature endpoints
+- `index.php` redirects to either `login.php` or `home.php`
+- `register.php` creates a new `students` row and logs the user in via session
+- `login.php` checks `students.email` and verifies the hashed password
+- `home.php` loads that student’s subject list and allows adding new subjects
+- `delete_subject.php?id={subjectId}` deletes only the subject owned by the current student
+- `logout.php` destroys the session
 
-| Use case | Proposed operation | Request information | Successful result |
+## 3. Route contract
+
+| Route | Method | Purpose | Auth required |
 |---|---|---|---|
-| US003 Manage subjects | `GET` and `POST /api/subjects` | Subject name and any fields agreed by the team | Subject identifiers and the user's subject list |
-| US004 Create academic tasks | `POST /api/tasks` | Subject ID, title, details, and General/Exam Prep type | Saved task identifier and task summary |
-| US005 Identify task obstacles | `POST /api/tasks/{taskId}/obstacles` | Agreed obstacle answers | Saved obstacle summary |
-| US009 Request task hint | `POST /api/tasks/{taskId}/hints` | Request context and step ID when available | Hint text and associated task/step |
+| `/backend/public/index.php` | `GET` | Redirect to login or home | No |
+| `/backend/public/register.php` | `GET`, `POST` | Create student account | No |
+| `/backend/public/login.php` | `GET`, `POST` | Sign in to the app | No |
+| `/backend/public/home.php` | `GET`, `POST` | View dashboard and add subjects | Yes |
+| `/backend/public/delete_subject.php?id=123` | `GET` | Delete a subject by ID for current student | Yes |
+| `/backend/public/logout.php` | `GET` | End session | Yes |
 
-Route paths and methods are proposals. Finalize them with the team before implementation; do not make a client depend on an undocumented route.
+## 4. Request and response conventions
 
-## Shared data conventions
+### Register form
 
-- Subject, task, and step identifiers are stable opaque IDs.
-- Task records refer to subjects by subject ID, not subject name.
-- Every user-owned record is scoped to the verified Firebase user ID.
-- MySQL is the source of truth for these records.
-- US009's step-level input depends on checklist-step behavior currently assigned to Sprint 2; confirm the Sprint 1 fallback or deferral.
+Request fields:
+- `name` — full student name
+- `email` — unique email address
+- `password` — minimum 8 characters
+
+Behavior:
+- Validates required fields and password length
+- Checks whether email already exists
+- Hashes password with `password_hash()`
+- Stores record in `students`
+- Creates session variables:
+  - `studentId`
+  - `studentName`
+- Redirects to `home.php`
+
+### Login form
+
+Request fields:
+- `email`
+- `password`
+
+Behavior:
+- Normalizes email to lowercase
+- Looks up `students` by email
+- Verifies password with `password_verify()`
+- Stores session variables and redirects to `home.php`
+- On failure, shows in-page error message
+
+### Subject form on home.php
+
+Request fields:
+- `subject_name` — required subject name
+- `subject_code` — optional code
+
+Behavior:
+- Validates subject name is not empty
+- Prevents duplicate subject names for the same student
+- Inserts into `subjects`
+- Displays success/error message in page
+
+### Delete subject action
+
+Query parameter:
+- `id` — subjectId to delete
+
+Behavior:
+- Confirms the subject belongs to the logged-in student
+- Executes `DELETE FROM subjects WHERE subjectId = ? AND studentId = ?`
+- Redirects back to `home.php`
+
+## 5. Data model used by the current app
+
+### students
+
+| Column | Type | Notes |
+|---|---|---|
+| `studentId` | INT PK | Auto-increment |
+| `name` | VARCHAR(100) | Required |
+| `email` | VARCHAR(150) | Unique |
+| `password` | VARCHAR(255) | Hashed password |
+| `createdAt` | TIMESTAMP | Default current timestamp |
+
+### subjects
+
+| Column | Type | Notes |
+|---|---|---|
+| `subjectId` | INT PK | Auto-increment |
+| `studentId` | INT FK | Owner of the subject |
+| `subjectName` | VARCHAR(100) | Required |
+| `subjectCode` | VARCHAR(20) | Optional |
+| `sortOrder` | INT | Default 0 |
+| `createdAt` | TIMESTAMP | Default current timestamp |
+
+## 6. Current implementation caveats
+
+- This is still a basic prototype, not a full production API.
+- There is no JSON response format yet.
+- There is no Firebase token layer in the current app.
+- There is no `api/` route structure yet.
+- The app assumes the database is already created and the `students` and `subjects` tables exist.
+
+## 7. Recommended next step
+
+If the team wants to evolve this into a cleaner system, the next version should either:
+
+- keep the current PHP server-rendered app and maintain these page contracts, or
+- migrate to a proper REST API with JSON endpoints and explicit auth tokens.
+
+For the current codebase, the official contract is the session-based PHP page flow above, not Firebase or JSON API conventions.

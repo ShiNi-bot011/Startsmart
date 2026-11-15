@@ -1,6 +1,6 @@
 <?php
-// backend/src/Config/Database.php
-// Shared database connection for all team members (No class needed!)
+// backend/config/database.php
+// Shared MySQL connection for the StartSmart PHP app
 
 $host     = "localhost";
 $username = "root";       // Default XAMPP username

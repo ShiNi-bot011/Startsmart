@@ -1,7 +1,7 @@
 <?php
 // backend/public/login.php
 session_start();
-include '../src/Config/Database.php';
+require_once __DIR__ . '/../config/database.php';
 
 $error = '';
 

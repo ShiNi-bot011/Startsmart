@@ -2,7 +2,7 @@
 // backend/public/home.php
 // Student Dashboard & Manage Subjects (US003)
 session_start();
-include '../src/Config/Database.php';
+require_once __DIR__ . '/../config/database.php';
 
 // Guard: Kick to login if not authenticated
 if (!isset($_SESSION['studentId'])) {
