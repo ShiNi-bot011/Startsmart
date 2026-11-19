@@ -8,12 +8,10 @@ $password = "";           // Default XAMPP password is empty
 $database = "startsmart"; // Database name
 
 // 1. Connect to MySQL
-$conn = new mysqli($host, $username, $password, $database);
+$conn = mysqli_connect($host, $username, $password, $database);
 
-// 2. Check if connection failed
-if ($conn->connect_error) {
-    die("Database connection failed: " . $conn->connect_error);
+if (!$conn) {
+    die('Database connection failed: ' . mysqli_connect_error());
 }
 
-// 3. Set charset so emojis and Malay names display properly
-$conn->set_charset("utf8mb4");
+mysqli_set_charset($conn, 'utf8mb4');

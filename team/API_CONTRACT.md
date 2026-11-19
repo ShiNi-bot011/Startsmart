@@ -1,127 +1,40 @@
-# API Contract — Current StartSmart PHP App
+# Sprint 1 PHP Pages
 
-Status: Current implementation contract for the PHP + HTML + MySQL application.
+The app uses simple PHP pages, HTML forms, `$_POST`, and `mysqli_query()`. It is not a JSON API. Text entered by users is escaped with `mysqli_real_escape_string()` before it is added to SQL.
 
-This project is not a JSON REST API yet. It uses PHP server-rendered pages with HTML forms and session-based authentication. The app is designed to run behind a PHP-enabled web server such as XAMPP, WAMP, MAMP, or Apache + PHP.
+## Features
 
-## 1. Application type
+| Story | What the app does |
+|---|---|
+| US001 Register | Creates an account with a unique email and hashed password. |
+| US002 Log in | Checks the email and password, starts a PHP session, and shows the student's own data. |
+| US003 Manage subjects | Adds, renames, reorders, and deletes subjects. |
+| US004 Create tasks | Creates a task under one of the student's subjects. Types: General, Exam Prep, Major Project. Exam Prep requires a future date. |
+| US005 Identify obstacles | Saves up to three fixed-choice answers and optional notes. Skip saves “Unclear where to start.” No AI is used. |
+| US009 Request a hint | Records a hint request and optional note. The app does not generate a hint. |
 
-- Runtime: PHP web application
-- Interface: HTML forms and server-side rendering
-- Auth model: PHP sessions, not Firebase
-- Persistence: MySQL via `backend/config/database.php`
-- Request pattern: `POST` form submission + redirect, not AJAX/JSON API calls
+## Pages
 
-## 2. Current authenticated flow
+All pages are in `backend/public/`.
 
-- `index.php` redirects to either `login.php` or `home.php`
-- `register.php` creates a new `students` row and logs the user in via session
-- `login.php` checks `students.email` and verifies the hashed password
-- `home.php` loads that student’s subject list and allows adding new subjects
-- `delete_subject.php?id={subjectId}` deletes only the subject owned by the current student
-- `logout.php` destroys the session
+| Page | Purpose |
+|---|---|
+| `index.php` | Opens login or home, depending on session. |
+| `register.php`, `login.php`, `logout.php` | Account and session actions. |
+| `home.php`, `delete_subject.php` | View and manage subjects and tasks. |
+| `create_task.php` | Create a task. |
+| `task.php` | View a task, its obstacle response, and hint request count. |
+| `obstacles.php` | Save obstacle answers. |
+| `request_hint.php` | Save a hint request. |
 
-## 3. Route contract
+Protected pages check `$_SESSION['studentId']`. Database connection settings are in `backend/config/database.php`.
 
-| Route | Method | Purpose | Auth required |
-|---|---|---|---|
-| `/backend/public/index.php` | `GET` | Redirect to login or home | No |
-| `/backend/public/register.php` | `GET`, `POST` | Create student account | No |
-| `/backend/public/login.php` | `GET`, `POST` | Sign in to the app | No |
-| `/backend/public/home.php` | `GET`, `POST` | View dashboard and add subjects | Yes |
-| `/backend/public/delete_subject.php?id=123` | `GET` | Delete a subject by ID for current student | Yes |
-| `/backend/public/logout.php` | `GET` | End session | Yes |
+## Database
 
-## 4. Request and response conventions
+For a new database, import `database/schema.sql`. If the database was created using the older schema, run `database/migrations/001_sprint1_features.sql` once.
 
-### Register form
+Sprint 1 uses `students`, `subjects`, `academic_tasks`, `task_obstacles`, and `task_hint_requests`.
 
-Request fields:
-- `name` — full student name
-- `email` — unique email address
-- `password` — minimum 8 characters
+## Not included
 
-Behavior:
-- Validates required fields and password length
-- Checks whether email already exists
-- Hashes password with `password_hash()`
-- Stores record in `students`
-- Creates session variables:
-  - `studentId`
-  - `studentName`
-- Redirects to `home.php`
-
-### Login form
-
-Request fields:
-- `email`
-- `password`
-
-Behavior:
-- Normalizes email to lowercase
-- Looks up `students` by email
-- Verifies password with `password_verify()`
-- Stores session variables and redirects to `home.php`
-- On failure, shows in-page error message
-
-### Subject form on home.php
-
-Request fields:
-- `subject_name` — required subject name
-- `subject_code` — optional code
-
-Behavior:
-- Validates subject name is not empty
-- Prevents duplicate subject names for the same student
-- Inserts into `subjects`
-- Displays success/error message in page
-
-### Delete subject action
-
-Query parameter:
-- `id` — subjectId to delete
-
-Behavior:
-- Confirms the subject belongs to the logged-in student
-- Executes `DELETE FROM subjects WHERE subjectId = ? AND studentId = ?`
-- Redirects back to `home.php`
-
-## 5. Data model used by the current app
-
-### students
-
-| Column | Type | Notes |
-|---|---|---|
-| `studentId` | INT PK | Auto-increment |
-| `name` | VARCHAR(100) | Required |
-| `email` | VARCHAR(150) | Unique |
-| `password` | VARCHAR(255) | Hashed password |
-| `createdAt` | TIMESTAMP | Default current timestamp |
-
-### subjects
-
-| Column | Type | Notes |
-|---|---|---|
-| `subjectId` | INT PK | Auto-increment |
-| `studentId` | INT FK | Owner of the subject |
-| `subjectName` | VARCHAR(100) | Required |
-| `subjectCode` | VARCHAR(20) | Optional |
-| `sortOrder` | INT | Default 0 |
-| `createdAt` | TIMESTAMP | Default current timestamp |
-
-## 6. Current implementation caveats
-
-- This is still a basic prototype, not a full production API.
-- There is no JSON response format yet.
-- There is no Firebase token layer in the current app.
-- There is no `api/` route structure yet.
-- The app assumes the database is already created and the `students` and `subjects` tables exist.
-
-## 7. Recommended next step
-
-If the team wants to evolve this into a cleaner system, the next version should either:
-
-- keep the current PHP server-rendered app and maintain these page contracts, or
-- migrate to a proper REST API with JSON endpoints and explicit auth tokens.
-
-For the current codebase, the official contract is the session-based PHP page flow above, not Firebase or JSON API conventions.
+This version uses PHP sessions, not Firebase. It does not import Moodle calendars, generate AI questions or hints, or implement Sprint 2 features.

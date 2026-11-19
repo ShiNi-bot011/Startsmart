@@ -1,31 +1,28 @@
 <?php
-// backend/public/login.php
 session_start();
-require_once __DIR__ . '/../config/database.php';
+include '../config/database.php';
 
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email    = strtolower(trim($_POST['email']));
+    $email = strtolower(trim($_POST['email']));
     $password = $_POST['password'];
 
-    if (empty($email) || empty($password)) {
-        $error = "Please enter email and password.";
+    if ($email === '' || $password === '') {
+        $error = 'Please enter email and password.';
     } else {
-        // Query students table
+        $email = mysqli_real_escape_string($conn, $email);
         $sql = "SELECT * FROM students WHERE email = '$email'";
         $result = mysqli_query($conn, $sql);
         $student = mysqli_fetch_assoc($result);
 
-        // Verify password
         if ($student && password_verify($password, $student['password'])) {
-            $_SESSION['studentId']   = $student['studentId'];
+            $_SESSION['studentId'] = $student['studentId'];
             $_SESSION['studentName'] = $student['name'];
-
-            header("Location: home.php");
+            header('Location: home.php');
             exit;
         } else {
-            $error = "Incorrect email or password!";
+            $error = 'Incorrect email or password!';
         }
     }
 }
@@ -38,8 +35,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <h2>Log In</h2>
-    <?php if (!empty($error)): ?>
-        <p style="color:red;"><?php echo $error; ?></p>
+    <?php if ($error !== ''): ?>
+        <p style="color:red;"><?php echo htmlspecialchars($error); ?></p>
     <?php endif; ?>
 
     <form action="login.php" method="POST">

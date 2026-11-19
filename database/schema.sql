@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS academic_tasks (
     subjectId INT NOT NULL,
     title VARCHAR(150) NOT NULL,
     description TEXT,
+    taskType VARCHAR(30) NOT NULL DEFAULT 'General',
     dueDate DATE DEFAULT NULL,
     status VARCHAR(50) NOT NULL DEFAULT 'Pending',
     progress INT NOT NULL DEFAULT 0,
@@ -67,12 +68,32 @@ CREATE TABLE IF NOT EXISTS task_obstacles (
     taskId INT DEFAULT NULL,
     obstacleType VARCHAR(100) NOT NULL,
     description TEXT,
+    answer1 VARCHAR(255) DEFAULT NULL,
+    answer2 VARCHAR(255) DEFAULT NULL,
+    answer3 VARCHAR(255) DEFAULT NULL,
+    isConfirmed BOOLEAN NOT NULL DEFAULT FALSE,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_obstacles PRIMARY KEY (obstacleId),
     CONSTRAINT fk_obstacles_subjects FOREIGN KEY (subjectId) 
         REFERENCES subjects(subjectId) ON DELETE CASCADE,
     CONSTRAINT fk_obstacles_tasks FOREIGN KEY (taskId) 
         REFERENCES academic_tasks(taskId) ON DELETE SET NULL
+);
+
+-- ---------------------------------------------------------------------
+-- Additional Sprint 1 table: Task hint requests (no generated AI output)
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS task_hint_requests (
+    hintRequestId INT AUTO_INCREMENT,
+    studentId INT NOT NULL,
+    taskId INT NOT NULL,
+    requestContext TEXT,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_task_hint_requests PRIMARY KEY (hintRequestId),
+    CONSTRAINT fk_hint_requests_students FOREIGN KEY (studentId)
+        REFERENCES students(studentId) ON DELETE CASCADE,
+    CONSTRAINT fk_hint_requests_tasks FOREIGN KEY (taskId)
+        REFERENCES academic_tasks(taskId) ON DELETE CASCADE
 );
 
 -- ---------------------------------------------------------------------

@@ -1,41 +1,35 @@
 <?php
-// backend/public/register.php
 session_start();
-require_once __DIR__ . '/../config/database.php';
+include '../config/database.php';
 
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name     = $_POST['name'];
-    $email    = strtolower(trim($_POST['email']));
+    $name = trim($_POST['name']);
+    $email = strtolower(trim($_POST['email']));
     $password = $_POST['password'];
 
-    // 1. Validation
-    if (empty($name) || empty($email) || empty($password)) {
-        $error = "Please fill in all fields.";
+    if ($name === '' || $email === '' || $password === '') {
+        $error = 'Please fill in all fields.';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = 'Please enter a valid email address.';
     } elseif (strlen($password) < 8) {
-        $error = "Password must be at least 8 characters.";
+        $error = 'Password must be at least 8 characters.';
     } else {
-        // 2. Check if email already exists in students table
-        $sql = "SELECT studentId FROM students WHERE email = '$email'";
-        $result = mysqli_query($conn, $sql);
+        $name = mysqli_real_escape_string($conn, $name);
+        $email = mysqli_real_escape_string($conn, $email);
+        $password = password_hash($password, PASSWORD_DEFAULT);
 
-        if (mysqli_num_rows($result) > 0) {
-            $error = "Email already registered!";
-        } else {
-            // 3. Hash password
-            $hashed = password_hash($password, PASSWORD_DEFAULT);
+        $sql = "INSERT INTO students (name, email, password)
+                VALUES ('$name', '$email', '$password')";
 
-            // 4. Insert new student into students table
-            $insertSql = "INSERT INTO students (name, email, password) VALUES ('$name', '$email', '$hashed')";
-            mysqli_query($conn, $insertSql);
-
-            // 5. Auto login via session
-            $_SESSION['studentId']   = mysqli_insert_id($conn);
+        if (mysqli_query($conn, $sql)) {
+            $_SESSION['studentId'] = mysqli_insert_id($conn);
             $_SESSION['studentName'] = $name;
-
-            header("Location: home.php");
+            header('Location: home.php');
             exit;
+        } else {
+            $error = 'Could not create account. The email may already be registered.';
         }
     }
 }
@@ -48,8 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <h2>Register Account</h2>
-    <?php if (!empty($error)): ?>
-        <p style="color:red;"><?php echo $error; ?></p>
+    <?php if ($error !== ''): ?>
+        <p style="color:red;"><?php echo htmlspecialchars($error); ?></p>
     <?php endif; ?>
 
     <form action="register.php" method="POST">
@@ -59,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         Email:<br>
         <input type="email" name="email" required><br><br>
 
-        Password (min 8 chars):<br>
+        Password (minimum 8 characters):<br>
         <input type="password" name="password" required><br><br>
 
         <button type="submit">Create Account</button>

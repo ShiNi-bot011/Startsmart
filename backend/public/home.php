@@ -1,44 +1,92 @@
 <?php
-// backend/public/home.php
-// Student Dashboard & Manage Subjects (US003)
 session_start();
-require_once __DIR__ . '/../config/database.php';
+include '../config/database.php';
 
-// Guard: Kick to login if not authenticated
 if (!isset($_SESSION['studentId'])) {
-    header("Location: login.php");
+    header('Location: login.php');
     exit;
 }
 
-$studentId   = $_SESSION['studentId'];
-$studentName = $_SESSION['studentName'];
-$msg         = '';
+$studentId = $_SESSION['studentId'];
+$message = '';
+$error = '';
 
-// Handle "Add Subject" Form Submission (US003 - Shi Ni)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_subject'])) {
-    $subjectName = trim($_POST['subject_name']);
-    $subjectCode = trim($_POST['subject_code']);
-
-    if (empty($subjectName)) {
-        $msg = "Subject name cannot be empty.";
-    } else {
-        // Check for duplicate subject name for this student
-        $checkSql = "SELECT * FROM subjects WHERE studentId = '$studentId' AND subjectName = '$subjectName'";
-        $checkResult = mysqli_query($conn, $checkSql);
-
-        if (mysqli_num_rows($checkResult) > 0) {
-            $msg = "Subject already exists!";
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['add_subject'])) {
+        $subjectName = trim($_POST['subject_name']);
+        $subjectCode = mysqli_real_escape_string($conn, trim($_POST['subject_code']));
+        if ($subjectName === '') {
+            $error = 'Subject name cannot be empty.';
         } else {
-            $insertSql = "INSERT INTO subjects (studentId, subjectName, subjectCode) VALUES ('$studentId', '$subjectName', '$subjectCode')";
-            mysqli_query($conn, $insertSql);
-            $msg = "Subject added successfully!";
+            $subjectName = mysqli_real_escape_string($conn, $subjectName);
+            $sql = "INSERT INTO subjects (studentId, subjectName, subjectCode)
+                    VALUES ('$studentId', '$subjectName', '$subjectCode')";
+        }
+
+        if ($error === '' && mysqli_query($conn, $sql)) {
+            $message = 'Subject added.';
+        } elseif ($error === '') {
+            $error = 'Subject already exists or could not be saved.';
+        }
+    }
+
+    if (isset($_POST['rename_subject'])) {
+        $subjectId = (int) $_POST['subject_id'];
+        $subjectName = trim($_POST['subject_name']);
+        $subjectCode = mysqli_real_escape_string($conn, trim($_POST['subject_code']));
+        if ($subjectName === '') {
+            $error = 'Subject name cannot be empty.';
+        } else {
+            $subjectName = mysqli_real_escape_string($conn, $subjectName);
+            $sql = "UPDATE subjects SET subjectName = '$subjectName', subjectCode = '$subjectCode'
+                    WHERE subjectId = $subjectId AND studentId = $studentId";
+        }
+
+        if ($error === '' && mysqli_query($conn, $sql)) {
+            $message = 'Subject updated.';
+        } elseif ($error === '') {
+            $error = 'Subject already exists or could not be updated.';
+        }
+    }
+
+    if (isset($_POST['move_subject'])) {
+        $subjectId = (int) $_POST['subject_id'];
+        $direction = $_POST['direction'];
+        $subjects = mysqli_query($conn, "SELECT subjectId FROM subjects WHERE studentId = $studentId ORDER BY sortOrder, subjectId");
+        $subjectIds = [];
+
+        while ($subject = mysqli_fetch_assoc($subjects)) {
+            $subjectIds[] = $subject['subjectId'];
+        }
+
+        $position = array_search($subjectId, $subjectIds);
+        $nextPosition = $direction === 'up' ? $position - 1 : $position + 1;
+
+        if ($position !== false && isset($subjectIds[$nextPosition])) {
+            $firstId = $subjectIds[$position];
+            $secondId = $subjectIds[$nextPosition];
+            $subjectIds[$position] = $secondId;
+            $subjectIds[$nextPosition] = $firstId;
+
+            foreach ($subjectIds as $order => $id) {
+                if (!mysqli_query($conn, "UPDATE subjects SET sortOrder = $order WHERE subjectId = $id AND studentId = $studentId")) {
+                    die('Could not update subject order: ' . mysqli_error($conn));
+                }
+            }
+            $message = 'Subject order updated.';
         }
     }
 }
 
-// Fetch all subjects for this student
-$sql = "SELECT * FROM subjects WHERE studentId = '$studentId' ORDER BY sortOrder ASC, subjectId ASC";
-$subjects = mysqli_query($conn, $sql);
+$subjects = mysqli_query($conn, "SELECT * FROM subjects WHERE studentId = $studentId ORDER BY sortOrder, subjectId");
+$tasks = mysqli_query(
+    $conn,
+    "SELECT academic_tasks.*, subjects.subjectName
+     FROM academic_tasks
+     JOIN subjects ON academic_tasks.subjectId = subjects.subjectId
+     WHERE academic_tasks.studentId = $studentId
+     ORDER BY academic_tasks.dueDate, academic_tasks.taskId"
+);
 ?>
 
 <!DOCTYPE html>
@@ -47,45 +95,63 @@ $subjects = mysqli_query($conn, $sql);
     <title>Home - StartSmart</title>
 </head>
 <body>
-    <h1>Welcome, <?php echo htmlspecialchars($studentName); ?>!</h1>
+    <h1>Welcome, <?php echo htmlspecialchars($_SESSION['studentName']); ?>!</h1>
     <p><a href="logout.php">Log Out</a></p>
-    <hr>
 
-    <h3>Manage Your Subjects (US003)</h3>
+    <?php if ($message !== ''): ?><p style="color:green;"><?php echo htmlspecialchars($message); ?></p><?php endif; ?>
+    <?php if ($error !== ''): ?><p style="color:red;"><?php echo htmlspecialchars($error); ?></p><?php endif; ?>
 
-    <?php if (!empty($msg)): ?>
-        <p style="color:blue;"><?php echo $msg; ?></p>
-    <?php endif; ?>
-
-    <!-- Form to Add Subject -->
+    <h2>Manage Subjects</h2>
     <form action="home.php" method="POST">
-        <label>Subject Name:</label><br>
-        <input type="text" name="subject_name" placeholder="e.g. Web Programming" required><br><br>
-
-        <label>Subject Code (optional):</label><br>
-        <input type="text" name="subject_code" placeholder="e.g. SECV2223"><br><br>
-
+        Subject name:
+        <input type="text" name="subject_name" required>
+        Subject code:
+        <input type="text" name="subject_code">
         <button type="submit" name="add_subject">Add Subject</button>
     </form>
 
-    <h3>Your Subject List:</h3>
     <ul>
-        <?php if (mysqli_num_rows($subjects) === 0): ?>
-            <li>No subjects yet. Add one above!</li>
-        <?php else: ?>
-            <?php while ($row = mysqli_fetch_assoc($subjects)): ?>
-                <li>
-                    <strong><?php echo htmlspecialchars($row['subjectName']); ?></strong>
-                    <?php if (!empty($row['subjectCode'])): ?>
-                        <span>(<?php echo htmlspecialchars($row['subjectCode']); ?>)</span>
-                    <?php endif; ?>
+        <?php while ($subject = mysqli_fetch_assoc($subjects)): ?>
+            <li>
+                <form action="home.php" method="POST" style="display:inline;">
+                    <input type="hidden" name="subject_id" value="<?php echo $subject['subjectId']; ?>">
+                    <input type="text" name="subject_name" value="<?php echo htmlspecialchars($subject['subjectName']); ?>" required>
+                    <input type="text" name="subject_code" value="<?php echo htmlspecialchars($subject['subjectCode']); ?>">
+                    <button type="submit" name="rename_subject">Save</button>
+                </form>
 
-                    <a href="delete_subject.php?id=<?php echo $row['subjectId']; ?>" 
-                       onclick="return confirm('Are you sure you want to delete this subject?');"
-                       style="color:red; margin-left:15px;">Delete</a>
-                </li>
-            <?php endwhile; ?>
-        <?php endif; ?>
+                <form action="home.php" method="POST" style="display:inline;">
+                    <input type="hidden" name="subject_id" value="<?php echo $subject['subjectId']; ?>">
+                    <input type="hidden" name="direction" value="up">
+                    <button type="submit" name="move_subject">Move up</button>
+                </form>
+
+                <form action="home.php" method="POST" style="display:inline;">
+                    <input type="hidden" name="subject_id" value="<?php echo $subject['subjectId']; ?>">
+                    <input type="hidden" name="direction" value="down">
+                    <button type="submit" name="move_subject">Move down</button>
+                </form>
+
+                <form action="delete_subject.php" method="POST" style="display:inline;"
+                      onsubmit="return confirm('Delete this subject and its tasks?');">
+                    <input type="hidden" name="id" value="<?php echo $subject['subjectId']; ?>">
+                    <button type="submit">Delete</button>
+                </form>
+            </li>
+        <?php endwhile; ?>
+    </ul>
+
+    <h2>Academic Tasks</h2>
+    <p><a href="create_task.php">Create Task</a></p>
+    <ul>
+        <?php while ($task = mysqli_fetch_assoc($tasks)): ?>
+            <li>
+                <a href="task.php?id=<?php echo $task['taskId']; ?>"><?php echo htmlspecialchars($task['title']); ?></a>
+                — <?php echo htmlspecialchars($task['subjectName']); ?>
+                (<?php echo htmlspecialchars($task['taskType']); ?>)
+                Due: <?php echo htmlspecialchars($task['dueDate'] ?: 'Not set'); ?>
+            </li>
+        <?php endwhile; ?>
     </ul>
 </body>
 </html>

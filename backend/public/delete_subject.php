@@ -1,20 +1,17 @@
 <?php
-// backend/public/delete_subject.php
 session_start();
-require_once __DIR__ . '/../config/database.php';
+include '../config/database.php';
 
 if (!isset($_SESSION['studentId'])) {
-    header("Location: login.php");
+    header('Location: login.php');
     exit;
 }
 
-$subjectId = $_GET['id'] ?? 0;
+$subjectId = (int) $_POST['id'];
 $studentId = $_SESSION['studentId'];
 
-// Delete subject belonging to this student
-$sql = "DELETE FROM subjects WHERE subjectId = '$subjectId' AND studentId = '$studentId'";
+$sql = "DELETE FROM subjects WHERE subjectId = $subjectId AND studentId = $studentId";
 mysqli_query($conn, $sql);
 
-// Redirect back to home.php
-header("Location: home.php");
+header('Location: home.php');
 exit;
