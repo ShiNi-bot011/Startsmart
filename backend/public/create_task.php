@@ -56,50 +56,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$subjects = mysqli_query($conn, "SELECT * FROM subjects WHERE studentId = $studentId ORDER BY subjectName");
+$subjects = mysqli_query(
+    $conn,
+    "SELECT * FROM subjects WHERE studentId = $studentId ORDER BY semesterNumber, sortOrder, subjectId"
+);
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Create Task - StartSmart</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h2>Create Academic Task</h2>
-    <p><a href="home.php">Home</a></p>
+    <header class="navbar">
+        <a class="brand" href="home.php">🚀 StartSmart</a>
+        <nav>
+            <a href="home.php">Home</a>
+            <a href="create_task.php">New Task</a>
+            <a href="import_calendar.php">Import UTM Calendar</a>
+            <a href="logout.php">Log Out</a>
+        </nav>
+    </header>
 
-    <?php if ($error !== ''): ?>
-        <p style="color:red;"><?php echo htmlspecialchars($error); ?></p>
-    <?php endif; ?>
+    <main class="container">
+        <section class="card">
+            <h2>📝 Create Academic Task</h2>
+            <p class="note">Tell us what you need to do. Next, we'll help you figure out what's in the way.</p>
 
-    <form action="create_task.php" method="POST">
-        Subject:<br>
-        <select name="subject_id" required>
-            <option value="">Choose a subject</option>
-            <?php while ($subject = mysqli_fetch_assoc($subjects)): ?>
-                <option value="<?php echo $subject['subjectId']; ?>">
-                    <?php echo htmlspecialchars($subject['subjectName']); ?>
-                </option>
-            <?php endwhile; ?>
-        </select><br><br>
+            <?php if ($error !== ''): ?>
+                <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
+            <?php endif; ?>
 
-        Task description:<br>
-        <input type="text" name="title" maxlength="150" required><br><br>
+            <form action="create_task.php" method="POST">
+                <label class="field">Subject
+                    <select name="subject_id" required>
+                        <option value="">Choose a subject</option>
+                        <?php while ($subject = mysqli_fetch_assoc($subjects)): ?>
+                            <option value="<?php echo $subject['subjectId']; ?>">
+                                Year <?php echo intdiv((int) $subject['semesterNumber'] - 1, 2) + 1; ?>,
+                                Semester <?php echo (((int) $subject['semesterNumber'] - 1) % 2) + 1; ?> —
+                                <?php echo htmlspecialchars($subject['subjectName']); ?>
+                            </option>
+                        <?php endwhile; ?>
+                    </select>
+                </label>
 
-        Additional details:<br>
-        <textarea name="description"></textarea><br><br>
+                <label class="field">Task description
+                    <input type="text" name="title" maxlength="150" placeholder="e.g. Write the SRS test cases" required>
+                </label>
 
-        Task type:<br>
-        <select name="task_type" required>
-            <option value="General">General</option>
-            <option value="Exam Prep">Exam Prep</option>
-            <option value="Major Project">Major Project</option>
-        </select><br><br>
+                <label class="field">Additional details <small>(optional)</small>
+                    <textarea name="description"></textarea>
+                </label>
 
-        Due date (required for Exam Prep):<br>
-        <input type="date" name="due_date"><br><br>
+                <label class="field">Task type
+                    <select name="task_type" required>
+                        <option value="General">General</option>
+                        <option value="Exam Prep">Exam Prep</option>
+                        <option value="Major Project">Major Project</option>
+                    </select>
+                </label>
 
-        <button type="submit">Save Task</button>
-    </form>
+                <label class="field">Due date <small>(required for Exam Prep)</small>
+                    <input type="date" name="due_date">
+                </label>
+
+                <div class="btn-row">
+                    <button type="submit">Save Task</button>
+                    <a class="btn btn-ghost" href="home.php">Cancel</a>
+                </div>
+            </form>
+        </section>
+    </main>
 </body>
 </html>

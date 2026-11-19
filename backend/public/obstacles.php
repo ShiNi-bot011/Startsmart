@@ -68,58 +68,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Task Obstacles - StartSmart</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h2>What is making this task difficult?</h2>
-    <p>Task: <?php echo htmlspecialchars($task['title']); ?></p>
-    <p><a href="task.php?id=<?php echo $taskId; ?>">Back to Task</a></p>
+    <header class="navbar">
+        <a class="brand" href="home.php">🚀 StartSmart</a>
+        <nav>
+            <a href="home.php">Home</a>
+            <a href="create_task.php">New Task</a>
+            <a href="import_calendar.php">Import UTM Calendar</a>
+            <a href="logout.php">Log Out</a>
+        </nav>
+    </header>
 
-    <?php if ($error !== ''): ?>
-        <p style="color:red;"><?php echo htmlspecialchars($error); ?></p>
-    <?php endif; ?>
+    <main class="container">
+        <section class="card">
+            <h2>🧩 What is making this task difficult?</h2>
+            <div class="callout"><strong>Task:</strong> <?php echo htmlspecialchars($task['title']); ?></div>
 
-    <form action="obstacles.php?task_id=<?php echo $taskId; ?>" method="POST">
-        <input type="hidden" name="task_id" value="<?php echo $taskId; ?>">
+            <?php if ($error !== ''): ?>
+                <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
+            <?php endif; ?>
 
-        Main obstacle:<br>
-        <select name="category" required>
-            <option value="Unclear requirements">Unclear requirements</option>
-            <option value="Feeling overwhelmed">Feeling overwhelmed</option>
-            <option value="Not understanding a concept">Not understanding a concept</option>
-            <option value="Not enough time">Not enough time</option>
-            <option value="Unclear where to start">Unclear where to start</option>
-            <option value="Other">Other</option>
-        </select><br><br>
+            <form action="obstacles.php?task_id=<?php echo $taskId; ?>" method="POST">
+                <input type="hidden" name="task_id" value="<?php echo $taskId; ?>">
 
-        Another difficulty (optional):<br>
-        <select name="answer2">
-            <option value="">Skip</option>
-            <option value="I do not understand what is required.">I do not understand what is required.</option>
-            <option value="The task feels too large.">The task feels too large.</option>
-            <option value="I need help understanding a concept.">I need help understanding a concept.</option>
-            <option value="I am unsure how to begin.">I am unsure how to begin.</option>
-            <option value="Something else is getting in the way.">Something else is getting in the way.</option>
-        </select><br><br>
+                <label class="field">Main obstacle
+                    <select name="category" required>
+                        <option value="Unclear requirements">Unclear requirements</option>
+                        <option value="Feeling overwhelmed">Feeling overwhelmed</option>
+                        <option value="Not understanding a concept">Not understanding a concept</option>
+                        <option value="Not enough time">Not enough time</option>
+                        <option value="Unclear where to start">Unclear where to start</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </label>
 
-        Any other difficulty (optional):<br>
-        <select name="answer3">
-            <option value="">Skip</option>
-            <option value="I do not understand what is required.">I do not understand what is required.</option>
-            <option value="The task feels too large.">The task feels too large.</option>
-            <option value="I need help understanding a concept.">I need help understanding a concept.</option>
-            <option value="I am unsure how to begin.">I am unsure how to begin.</option>
-            <option value="Something else is getting in the way.">Something else is getting in the way.</option>
-        </select><br><br>
+                <label class="field">Another difficulty <small>(optional)</small>
+                    <select name="answer2">
+                        <option value="">Skip</option>
+                        <option value="I do not understand what is required.">I do not understand what is required.</option>
+                        <option value="The task feels too large.">The task feels too large.</option>
+                        <option value="I need help understanding a concept.">I need help understanding a concept.</option>
+                        <option value="I am unsure how to begin.">I am unsure how to begin.</option>
+                        <option value="Something else is getting in the way.">Something else is getting in the way.</option>
+                    </select>
+                </label>
 
-        Details (optional):<br>
-        <textarea name="details"></textarea><br><br>
+                <label class="field">Any other difficulty <small>(optional)</small>
+                    <select name="answer3">
+                        <option value="">Skip</option>
+                        <option value="I do not understand what is required.">I do not understand what is required.</option>
+                        <option value="The task feels too large.">The task feels too large.</option>
+                        <option value="I need help understanding a concept.">I need help understanding a concept.</option>
+                        <option value="I am unsure how to begin.">I am unsure how to begin.</option>
+                        <option value="Something else is getting in the way.">Something else is getting in the way.</option>
+                    </select>
+                </label>
 
-        <label><input type="checkbox" name="confirm"> I confirm this obstacle</label><br><br>
-        <button type="submit">Save Answers</button>
-        <button type="submit" name="skip" value="1">Skip</button>
-    </form>
+                <label class="field">Details <small>(optional)</small>
+                    <textarea name="details"></textarea>
+                </label>
+
+                <label class="check"><input type="checkbox" name="confirm"> I confirm this obstacle</label>
+
+                <div class="btn-row">
+                    <button type="submit">Save Answers</button>
+                    <button type="submit" name="skip" value="1" class="btn-ghost">Skip</button>
+                    <a class="btn btn-ghost" href="task.php?id=<?php echo $taskId; ?>">Back to Task</a>
+                </div>
+            </form>
+        </section>
+    </main>
 </body>
 </html>

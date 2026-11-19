@@ -7,11 +7,21 @@ if (!isset($_SESSION['studentId'])) {
     exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['id'])) {
+    header('Location: home.php');
+    exit;
+}
+
 $subjectId = (int) $_POST['id'];
-$studentId = $_SESSION['studentId'];
+$studentId = (int) $_SESSION['studentId'];
+$semester = filter_var($_POST['semester'] ?? 1, FILTER_VALIDATE_INT);
+$semester = $semester !== false && $semester >= 1 && $semester <= 8 ? $semester : 1;
 
 $sql = "DELETE FROM subjects WHERE subjectId = $subjectId AND studentId = $studentId";
-mysqli_query($conn, $sql);
+if (!mysqli_query($conn, $sql)) {
+    http_response_code(500);
+    exit('Could not delete subject.');
+}
 
-header('Location: home.php');
+header("Location: home.php?semester=$semester");
 exit;

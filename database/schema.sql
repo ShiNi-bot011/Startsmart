@@ -21,24 +21,25 @@ CREATE TABLE IF NOT EXISTS students (
 
 -- ---------------------------------------------------------------------
 -- 2. Entity: SUBJECTS (1:M Relationship: Student manages Subject)
--- Logical Model: SUBJECTS (subjectId, subjectName, subjectCode, sortOrder, createdAt, studentId)
+-- Logical Model: SUBJECTS (subjectId, subjectName, subjectCode, semesterNumber, sortOrder, createdAt, studentId)
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS subjects (
     subjectId INT AUTO_INCREMENT,
     studentId INT NOT NULL,
     subjectName VARCHAR(100) NOT NULL,
     subjectCode VARCHAR(20) DEFAULT NULL,
+    semesterNumber TINYINT UNSIGNED NOT NULL DEFAULT 1,
     sortOrder INT NOT NULL DEFAULT 0,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_subjects PRIMARY KEY (subjectId),
     CONSTRAINT fk_subjects_students FOREIGN KEY (studentId) 
         REFERENCES students(studentId) ON DELETE CASCADE,
-    CONSTRAINT uq_subjects_student_name UNIQUE (studentId, subjectName)
+    CONSTRAINT uq_subjects_student_semester_name UNIQUE (studentId, semesterNumber, subjectName)
 );
 
 -- ---------------------------------------------------------------------
 -- 3. Entity: ACADEMIC_TASKS (1:M Relationship: Student creates AcademicTask; belongs to Subject)
--- Logical Model: ACADEMIC_TASKS (taskId, title, description, dueDate, status, progress, createdAt, studentId, subjectId)
+-- Logical Model: ACADEMIC_TASKS (taskId, title, description, dueDate, externalEventUid, status, progress, createdAt, studentId, subjectId)
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS academic_tasks (
     taskId INT AUTO_INCREMENT,
@@ -48,6 +49,7 @@ CREATE TABLE IF NOT EXISTS academic_tasks (
     description TEXT,
     taskType VARCHAR(30) NOT NULL DEFAULT 'General',
     dueDate DATE DEFAULT NULL,
+    externalEventUid VARCHAR(255) DEFAULT NULL,
     status VARCHAR(50) NOT NULL DEFAULT 'Pending',
     progress INT NOT NULL DEFAULT 0,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -55,7 +57,8 @@ CREATE TABLE IF NOT EXISTS academic_tasks (
     CONSTRAINT fk_tasks_students FOREIGN KEY (studentId) 
         REFERENCES students(studentId) ON DELETE CASCADE,
     CONSTRAINT fk_tasks_subjects FOREIGN KEY (subjectId) 
-        REFERENCES subjects(subjectId) ON DELETE CASCADE
+        REFERENCES subjects(subjectId) ON DELETE CASCADE,
+    CONSTRAINT uq_tasks_student_external_event UNIQUE (studentId, externalEventUid)
 );
 
 -- ---------------------------------------------------------------------

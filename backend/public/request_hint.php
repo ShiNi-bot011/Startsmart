@@ -41,25 +41,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Request Hint - StartSmart</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h2>Request a Hint</h2>
-    <p>Task: <?php echo htmlspecialchars($task['title']); ?></p>
-    <p>This records your request. It does not generate an AI hint.</p>
-    <p><a href="task.php?id=<?php echo $taskId; ?>">Back to Task</a></p>
+    <header class="navbar">
+        <a class="brand" href="home.php">🚀 StartSmart</a>
+        <nav>
+            <a href="home.php">Home</a>
+            <a href="create_task.php">New Task</a>
+            <a href="import_calendar.php">Import UTM Calendar</a>
+            <a href="logout.php">Log Out</a>
+        </nav>
+    </header>
 
-    <?php if ($error !== ''): ?>
-        <p style="color:red;"><?php echo htmlspecialchars($error); ?></p>
-    <?php endif; ?>
+    <main class="container">
+        <section class="card">
+            <h2>💡 Request a Hint</h2>
+            <div class="callout"><strong>Task:</strong> <?php echo htmlspecialchars($task['title']); ?></div>
+            <p class="note">This records your request. It does not generate an AI hint.</p>
 
-    <form action="request_hint.php?task_id=<?php echo $taskId; ?>" method="POST">
-        <input type="hidden" name="task_id" value="<?php echo $taskId; ?>">
-        What do you need help with?<br>
-        <textarea name="context"></textarea><br><br>
-        <button type="submit">Record Request</button>
-    </form>
+            <?php if ($error !== ''): ?>
+                <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
+            <?php endif; ?>
+
+            <form action="request_hint.php?task_id=<?php echo $taskId; ?>" method="POST">
+                <input type="hidden" name="task_id" value="<?php echo $taskId; ?>">
+
+                <label class="field">What do you need help with?
+                    <textarea name="context"></textarea>
+                </label>
+
+                <div class="btn-row">
+                    <button type="submit">Record Request</button>
+                    <a class="btn btn-ghost" href="task.php?id=<?php echo $taskId; ?>">Back to Task</a>
+                </div>
+            </form>
+        </section>
+    </main>
 </body>
 </html>
